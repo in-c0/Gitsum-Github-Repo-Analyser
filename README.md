@@ -3,8 +3,10 @@
 ## What it does:
 Gives an overview of a Github repository, providing summaries of important files.
 
+## How to use:
+List of Features
 
-## How it does:
+## How it works:
 #### Main Feature:
 1. GRAKKEN reads through the directory structure.
 2. GRAKKEN ranks files by importance based on factors like file name and contents (e.g. classes, functions, README, main code files).
