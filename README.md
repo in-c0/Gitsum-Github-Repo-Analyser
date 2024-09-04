@@ -1,7 +1,7 @@
 # GRAKKEN Github-Repo-Analyser
 
 ## What it does:
-Gives an overview of a Github repository, providing summaries of the important-looking codes.
+Gives an overview of a Github repository, providing summaries of important files.
 
 
 ## How it does:
