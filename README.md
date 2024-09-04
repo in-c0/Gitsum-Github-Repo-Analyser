@@ -20,3 +20,6 @@ Gives an overview of a Github repository, providing summaries of important files
 **OpenAI GPT API** for file content summarization.
 **Custom Query Interface** to dive deeper into specific files based on ranking.
 
+
+Hosted: https://app.netlify.com/teams/in-c0/sites
+Domain: https://resonant-starburst-ce7ed2.netlify.app
