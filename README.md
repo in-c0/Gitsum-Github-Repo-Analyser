@@ -1,5 +1,18 @@
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
 
+(Landing Page Design)
+
+"Git made easy and readable. Grakken helps you understand repositories right away with AI summary and analysis."
+
+```plaintext
+[Headline] 
+"Git made easy and readable. Grakken helps you understand repositories right away with AI summary and analysi"
+
+[Input Field]  
+Paste your repository URL here: [____________________] [Analyse]
+```
+
+
 
 
 ## What it does:
