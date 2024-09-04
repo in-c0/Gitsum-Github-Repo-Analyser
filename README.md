@@ -1,4 +1,10 @@
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
+name ideas?:
+grakken
+gitme
+gitty
+gitsum
+
 
 (Landing Page Design)
 
