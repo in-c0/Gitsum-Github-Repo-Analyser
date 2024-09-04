@@ -43,3 +43,7 @@ Hosted: https://app.netlify.com/teams/in-c0/sites
 Domain: https://resonant-starburst-ce7ed2.netlify.app
 Thanks to: https://dub.co/ and https://github.com/RiteshKumarShukla/AI-Summarizer/tree/main  for website design inspiration
 
+
+--
+
+What other features would you like to see? Got any feedback / bug report? Send message at ___
