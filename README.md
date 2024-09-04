@@ -23,3 +23,5 @@ Gives an overview of a Github repository, providing summaries of important files
 
 Hosted: https://app.netlify.com/teams/in-c0/sites
 Domain: https://resonant-starburst-ce7ed2.netlify.app
+Thanks to: https://dub.co/ and https://github.com/RiteshKumarShukla/AI-Summarizer/tree/main  for website design inspiration
+
