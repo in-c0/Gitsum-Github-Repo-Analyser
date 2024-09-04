@@ -1,4 +1,6 @@
-# GRAKKEN Github-Repo-Analyser
+# GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
+
+
 
 ## What it does:
 Gives an overview of a Github repository, providing summaries of important files.
@@ -6,11 +8,25 @@ Gives an overview of a Github repository, providing summaries of important files
 ## How to use:
 List of Features
 
-## How it works:
+
+---
+# Roadmap:
+
+## Features to add
+List of features
+
+## How it currently works:
+#### Main Feature:
+1. GRAKKEN reads through the directory structure.
+2. GRAKKEN ranks files by importance based on factors like file name and contents (e.g. classes, functions, README, main code files).
+3. GRAKKEN uses GPT3.5 to summarize the most important files.
+
+## Pipeline changes:
 #### Main Feature:
 1. GRAKKEN reads through the directory structure.
 2. GRAKKEN ranks files by importance based on factors like file name and contents (e.g. classes, functions, README, main code files).
 3. GRAKKEN then uses an LLM (like GPT-4 via LangChain) to summarize the most important files.
+
 
 #### Additional Features: 
 - optional query / further analyses and summarises each file in the repo in the order of importance
