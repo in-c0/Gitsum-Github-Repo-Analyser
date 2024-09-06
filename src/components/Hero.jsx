@@ -25,6 +25,8 @@ const Hero = () => {
                 Simplify your project with Grakken, an open-source git repository analyzer
                 that helps you understand repositories right away.
             </h2>
+            <button className="btn btn-primary">Test Button</button>
+
         </header>
     );
 };
