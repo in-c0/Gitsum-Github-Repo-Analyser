@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { linkIcon } from "../assets";
 import { mockTreeData } from '../utils/mockTreeData';
+import { buildFullTree } from '../utils/processDataForTreeView';
+import RepoTreeView from './RepoTreeView';
 
 const Demo = () => {
   const [repo, setRepo] = useState({ url: "" });
   const [treeData, setTreeData] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setTreeData(mockTreeData);
+    const [owner, repo] = article.url.split('/').slice(-2);
+    // const treeData = await buildFullTree(owner, repo);
+    setTreeData(mockTreeData); // offline mock data for now
+    
   };
 
   return (
@@ -41,18 +46,13 @@ const Demo = () => {
         </form>
       </div>
 
-      {treeData && (
-        <div className='my-10 max-w-full flex justify-center items-center'>
-          <div className='flex flex-col gap-3'>
-            <h2 className='font-satoshi font-bold text-gray-600 text-xl'>
-              Repository <span className='blue_gradient'>Structure</span>
-            </h2>
-            <div className='tree-view'>
-              <pre>{JSON.stringify(treeData, null, 2)}</pre>
-            </div>
-          </div>
-        </div>
+
+      {/* Display Result */}
+    <div className='my-10 max-w-full flex justify-center items-center'>
+      {article.treeData && (
+        <RepoTreeView treeData={article.treeData} />
       )}
+    </div>    
     </section>
   );
 };
