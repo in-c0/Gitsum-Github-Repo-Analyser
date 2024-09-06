@@ -56,6 +56,9 @@ const Demo = () => {
   );
 };
 
+export default Demo;
+
+
 // Previously working code:
 
 // export default Demo;
