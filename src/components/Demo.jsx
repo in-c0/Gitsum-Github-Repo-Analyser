@@ -1,18 +1,54 @@
 import { useState } from "react";
-import { linkIcon } from "../assets";
-import { mockTreeData } from '../utils/mockTreeData';
+import { linkIcon, loader } from "../assets";
+// import { mockTreeData } from '../utils/mockTreeData';   // for offline testing. call with setTreeData(mockTreeData)
 import { buildFullTree } from '../utils/processDataForTreeView';
 import RepoTreeView from './RepoTreeView';
 
 const Demo = () => {
   const [repo, setRepo] = useState({ url: "" });
   const [treeData, setTreeData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  
+  const validateGitHubUrl = (url) => {
+    const githubUrlPattern = /^https?:\/\/github\.com\/[\w.-]+\/[\w.-]+$/;
+    return githubUrlPattern.test(url);
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // const treeData = await buildFullTree(owner, repo);
-    setTreeData(mockTreeData); // offline mock data for now
-    
+    setIsLoading(true);
+    setError(null);
+
+    if (!validateGitHubUrl(repo.url)) {
+      setError("Invalid GitHub URL. Please enter a valid repository URL.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const [owner, repoName] = repo.url.split('/').slice(-2);
+      const fetchedTreeData = await buildFullTree(owner, repoName);
+      
+      if (fetchedTreeData.length > 100) {
+        setError("This repository is too large. Only the top-level directory structure is displayed.");
+        fetchedTreeData.length = 100; // Limit to top 100 items
+      }
+      
+      setTreeData(fetchedTreeData);
+    } catch (error) {
+      console.error("Error fetching repository data:", error);
+      if (error.message.includes("Not Found")) {
+        setError("This repository is either private or does not exist. Only public repositories are supported.");
+      } else if (error.message.includes("timeout")) {
+        setError("The request timed out. Please try again later.");
+      } else {
+        setError("An error occurred while fetching the repository data. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,15 +83,21 @@ const Demo = () => {
 
 
       {/* Display Result */}
-    <div className='my-10 max-w-full flex justify-center items-center'>
-      {treeData && (
-        <RepoTreeView treeData={treeData} />
-      )}
-    </div>    
+      <div className='my-10 max-w-full flex justify-center items-center'>
+        {isLoading ? (
+          <img src={loader} alt='loader' className='w-20 h-20 object-contain' />
+        ) : error ? (
+          <div className='font-inter font-bold text-black text-center'>
+            <p className='text-red-500'>{error}</p>
+            <p className='text-sm mt-2'>Please check the URL and try again.</p>
+          </div>
+        ) : treeData ? (
+          <RepoTreeView treeData={treeData} />
+        ) : null}
+      </div>
     </section>
   );
 };
-
 export default Demo;
 
 
