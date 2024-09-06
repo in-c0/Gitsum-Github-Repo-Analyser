@@ -5,10 +5,10 @@ const rapidApiKey = import.meta.env.VITE_RAPID_API_ARTICLE_KEY;
 export const articleApi = createApi({
     reducerPath: 'articleApi',
     baseQuery: fetchBaseQuery({
-        baseUrl: 'https://article-extractor-and-summarizer.p.rapidapi.com/',
+        baseUrl: 'https://https://grakken-github-repo-analyser.vercel.app/',
         prepareHeaders: (headers) => {
             headers.set('X-RapidAPI-Key', rapidApiKey);
-            headers.set('X-RapidAPI-Host', 'article-extractor-and-summarizer.p.rapidapi.com');
+            headers.set('X-RapidAPI-Host', 'https://grakken-github-repo-analyser.vercel.app/');
 
             return headers;
         },

@@ -1,4 +1,8 @@
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
+
+
+A lightweight, user-friendly platform that analyzes GitHub repositories, generates summaries of key files, and makes the repository easy to understand
+
 name ideas?:
 grakken
 gitme
@@ -18,15 +22,16 @@ gitsum
 Paste your repository URL here: [____________________] [Analyse]
 ```
 
+## How to use
 
+Visit the link below:
+[]
+Paste the GitHub repository URL and click 'Analyze'.
+Our backend then fetches repository data via GitHub API and ranks files by importance.
+Our AI (GPT 4.0) summarizes key files, and the results are displayed in an organized, easy-to-navigate layout.
+You can now view the summaries of the code, with the option to explore each summary in more detail.
 
-
-## What it does:
-Gives an overview of a Github repository, providing summaries of important files.
-
-## How to use:
-List of Features
-
+(How to Use Video)
 
 ---
 # Roadmap:

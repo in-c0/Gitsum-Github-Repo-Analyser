@@ -18,14 +18,12 @@ const Hero = () => {
             </nav>
 
             <h1 className='head_text'>
-                Simplify Git Repository with <br className='max-md:hidden' />
-                <span className='orange_gradient '>OpenAI GPT-4</span>
+                Unlock GitHub insights with <br className='max-md:hidden' />
+                <span className='orange_gradient '>GRAKKEN</span>
             </h1>
             <h2 className='desc'>
-                Simplify your project with Grakken, an open-source git repository analyzer
-                that helps you understand repositories right away.
+                Analyze, summarize, and optimize repositories
             </h2>
-            <button className="btn btn-primary">Test Button</button>
 
         </header>
     );
