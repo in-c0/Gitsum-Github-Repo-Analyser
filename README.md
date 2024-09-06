@@ -1,3 +1,6 @@
+remember to join developer program once MVP built
+https://docs.github.com/en/get-started/exploring-integrations/github-developer-program
+
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
 
 
