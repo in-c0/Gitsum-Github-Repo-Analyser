@@ -6,5 +6,14 @@ export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     include: ['preline']
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://your-vercel-deployment-url.vercel.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      }
+    }
   }
 })
