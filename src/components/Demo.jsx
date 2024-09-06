@@ -26,33 +26,27 @@ const Demo = () => {
       setIsLoading(false);
       return;
     }
+    
+    const [owner, repoName] = repo.url.split('/').slice(-2);
+    const result = await buildFullTree(owner, repoName);
 
-    try {
-      const [owner, repoName] = repo.url.split('/').slice(-2);
-      const fetchedTreeData = await buildFullTree(owner, repoName);
-      
-      if (fetchedTreeData.length > 100) {
+    if (result.error) {
+      setError(result.error);
+    } else {
+      setTreeData(result);
+      if (result.length > 100) {
         setError("This repository is too large. Only the top-level directory structure is displayed.");
-        fetchedTreeData.length = 100; // Limit to top 100 items
+        result.length = 100; // Limit to top 100 items
       }
-      
-      setTreeData(fetchedTreeData);
-    } catch (error) {
-      console.error("Error fetching repository data:", error);
-      if (error.message.includes("Not Found")) {
-        setError("This repository is either private or does not exist. Only public repositories are supported.");
-      } else if (error.message.includes("timeout")) {
-        setError("The request timed out. Please try again later.");
-      } else {
-        setError("An error occurred while fetching the repository data. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
     }
+
+    setIsLoading(false);
   };
+
 
   return (
     <section className='mt-16 w-full max-w-xl'>
+      {/* An input field to accept the GitHub repository URL */}
       <div className='flex flex-col w-full gap-2'>
         <form
           className='relative flex justify-center items-center'

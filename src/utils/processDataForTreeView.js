@@ -25,23 +25,41 @@ export const processDataForTreeView = (data) => {
   
     return buildTree(data);
   };
-  
+      
   export const fetchDirectoryContents = async (owner, repo, path = '') => {
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
-    const data = await response.json();
-    return processDataForTreeView(data);
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+            return { error: "This repository is either private or does not exist. Only public repositories are supported." };
+        } else if (response.status === 403) {
+            return { error: "API rate limit exceeded. Please try again later." };
+        } else {
+            return { error: "An error occurred while fetching the repository data. Please try again." };
+        }
+      }
+
+      const data = await response.json();
+      return processDataForTreeView(data);
   };
-  
+
   export const buildFullTree = async (owner, repo) => {
     const buildRecursive = async (path = '') => {
       const contents = await fetchDirectoryContents(owner, repo, path);
+      if (contents.error) {
+        return contents;
+      }
       for (const item of contents) {
         if (item.type === 'dir') {
-          item.children = await buildRecursive(item.path);
+          const subContents = await buildRecursive(item.path);
+          if (subContents.error) {
+            return subContents;
+          }
+          item.children = subContents;
         }
       }
       return contents;
     };
-  
+
     return buildRecursive();
   };
