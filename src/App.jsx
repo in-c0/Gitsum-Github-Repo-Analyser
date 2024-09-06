@@ -5,13 +5,13 @@ import './App.css';
 
 const App = () => {
     
-    // reinitialize UI components (HSStaticMethods) on route change / page reload
-    const location = useLocation();
-    useEffect(() => {
-        if (window.HSStaticMethods) {
-        window.HSStaticMethods.autoInit();
-        }
-    }, [location.pathname]);
+    // // reinitialize UI components (HSStaticMethods) on route change / page reload
+    // const location = useLocation();
+    // useEffect(() => {
+    //     if (window.HSStaticMethods) {
+    //     window.HSStaticMethods.autoInit();
+    //     }
+    // }, [location.pathname]);
 
     
     return (
