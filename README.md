@@ -57,11 +57,14 @@ List of features
 **OpenAI GPT API** for file content summarization.
 **Custom Query Interface** to dive deeper into specific files based on ranking.
 
-
+Using: viteJS, React, TailwindCSS (see package.json for more dependencies), [Preline UI](https://preline.co/index.html)
 Hosted: https://app.netlify.com/teams/in-c0/sites
 Domain: https://resonant-starburst-ce7ed2.netlify.app
 Thanks to: https://dub.co/ and https://github.com/RiteshKumarShukla/AI-Summarizer/tree/main  for website design inspiration
 
+
+In `services/article.js`, the current setup is using **Redux Toolkit Query** (createApi and fetchBaseQuery) to make API requests to a service hosted on RapidAPI. 
+The API will extract repository data from URL and summarise the key files.
 
 --
 
