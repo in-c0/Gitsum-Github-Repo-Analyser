@@ -4,6 +4,21 @@ const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN,
 });
 
+export const fetchGitHubFileContent = async (owner, repo, path) => {
+  try {
+    const { data: fileContent } = await octokit.repos.getContent({
+      owner,
+      repo,
+      path,
+    });
+
+    const content = atob(fileContent.content);  // Decode base64
+    return content;
+  } catch (error) {
+    return { error: error.message };
+  }
+};
+
 export const processDataForTreeView = (data) => {
   const buildTree = (items, path = '') => {
     const tree = {};

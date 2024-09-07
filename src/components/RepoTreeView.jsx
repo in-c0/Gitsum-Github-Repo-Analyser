@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-
+import { Octokit } from '@octokit/rest';
 // TreeNode component
 const TreeNode = ({ node, selectedFile, setSelectedFile, fetchFileContent }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -108,24 +108,28 @@ const TreeNode = ({ node, selectedFile, setSelectedFile, fetchFileContent }) => 
 };
 
 // RepoTreeView component with tabs, file selection, and content fetching
-const RepoTreeView = ({ treeData }) => {
+const RepoTreeView = ({ treeData, owner, repo }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileContent, setFileContent] = useState('');
   const [activeTab, setActiveTab] = useState('tab1');
 
+  const octokit = new Octokit();
+
   // Function to fetch file content
-  const fetchFileContent = async (filePath) => {
+  const fetchFileContent = async (path) => {
     try {
-      // Replace with your Git file fetching logic (e.g., GitHub API or custom backend API)
-      const response = await fetch(`/api/getFileContent?path=${filePath}`); // Example API
-      const data = await response.text();
-      setFileContent(data);
+      const { data: fileContent } = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+      });
+
+      const content = atob(fileContent.content);  // Decode base64
+      setFileContent(content);
     } catch (error) {
-      console.error('Error fetching file content:', error);
-      setFileContent('Error fetching file content');
+      setFileContent(`Error fetching file content: ${error.message}`);
     }
   };
-
   return (
     <div className="flex flex-col md:flex-row bg-white p-4 rounded-lg shadow-md">
       {/* Left panel - Treeview */}
