@@ -50,6 +50,12 @@ export const fetchGitHubTree = async (owner, repo) => {
       recursive: "1"
     });
 
+    console.log('X-RateLimit-Limit:', response.headers['x-ratelimit-limit']);
+    console.log('X-RateLimit-Remaining:', response.headers['x-ratelimit-remaining']);
+    console.log('X-RateLimit-Reset:', response.headers['x-ratelimit-reset']);
+    console.log('X-RateLimit-Used:', response.headers['x-ratelimit-used']);
+
+
     return processDataForTreeView(response.data.tree);
   } catch (error) {
     if (error.status === 404) {
