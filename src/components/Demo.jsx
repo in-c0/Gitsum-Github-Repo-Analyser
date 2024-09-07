@@ -9,6 +9,8 @@ const Demo = () => {
   const [treeData, setTreeData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null); // For file selection
+  const [repoSummary, setRepoSummary] = useState(""); // Repo summary placeholder
 
   const validateGitHubUrl = (url) => {
     const githubUrlPattern = /^https?:\/\/github\.com\/[\w.-]+\/[\w.-]+$/;
@@ -33,18 +35,22 @@ const Demo = () => {
       setError(result.error);
     } else {
       setTreeData(result);
-      if (result.length > 100) {
-        setError("This repository is too large. Only the top-level directory structure is displayed.");
-        result.length = 100; // Limit to top 100 items
-      }
+      // Placeholder for repo summary
+      setRepoSummary(`Summary for ${repoName}: This repository contains ${result.length} files and directories.`);
     }
 
     setIsLoading(false);
   };
 
+  const handleFileClick = (file) => {
+    setSelectedFile(file);
+    // Generate summary for the selected file, placeholder for now
+    setRepoSummary(`Summary for file ${file.name}: This file contains ${file.size} bytes.`);
+  };
+
   return (
     <section className='mt-16 w-full max-w-xl'>
-      {/* An input field to accept the GitHub repository URL */}
+      {/* Input Section */}
       <div className='flex flex-col w-full gap-2'>
         <form
           className='relative flex justify-center items-center'
@@ -73,18 +79,63 @@ const Demo = () => {
         </form>
       </div>
 
-      {/* Display Result */}
-      <div className='my-10 max-w-full flex justify-center items-center'>
-        {isLoading ? (
-          <img src={loader} alt='loader' className='w-20 h-20 object-contain' />
-        ) : error ? (
-          <div className='font-inter font-bold text-black text-center'>
-            <p className='text-red-500'>{error}</p>
-            <p className='text-sm mt-2'>Please try again later, or check FAQ for troubleshooting.</p>
+      {/* Repo Tree and Side Panel */}
+      <div className="flex flex-wrap my-10 max-w-full">
+        {/* Left: Repo Tree */}
+        <div className="flex-grow max-h-screen overflow-auto">
+          {isLoading ? (
+            <img src={loader} alt='loader' className='w-20 h-20 object-contain' />
+          ) : error ? (
+            <div className='font-inter font-bold text-black text-center'>
+              <p className='text-red-500'>{error}</p>
+              <p className='text-sm mt-2'>Please try again later.</p>
+            </div>
+          ) : treeData ? (
+            <RepoTreeView treeData={treeData} onFileClick={handleFileClick} />
+          ) : null}
+        </div>
+
+        {/* Right: AI Interaction Panel */}
+        {treeData && (
+          <div className="w-1/2 min-w-[300px] pl-6">
+            <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-md dark:bg-neutral-800 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI Interaction Panel</h3>
+
+              {/* Repository Summary */}
+              <div className="mt-4">
+                <h4 className="text-md font-bold">Repository Summary</h4>
+                <p className="text-sm text-gray-800 dark:text-gray-200 mt-2">
+                  {repoSummary}
+                </p>
+              </div>
+
+              {/* File Summary */}
+              {selectedFile && (
+                <div className="mt-6">
+                  <h4 className="text-md font-bold">File Summary</h4>
+                  <p className="text-sm text-gray-800 dark:text-gray-200 mt-2">
+                    Summary for {selectedFile.name}: This file contains {selectedFile.size} bytes.
+                  </p>
+                </div>
+              )}
+
+              {/* Chat Section for AI */}
+              <div className="mt-6">
+                <h4 className="text-md font-bold">Chat with AI</h4>
+                <div className="border-t border-gray-200 pt-4">
+                  <textarea
+                    placeholder="Ask the AI about the code..."
+                    className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:ring-blue-300 dark:bg-neutral-700 dark:text-white"
+                    rows="4"
+                  ></textarea>
+                  <button className="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600">
+                    Ask AI
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : treeData ? (
-          <RepoTreeView treeData={treeData} />
-        ) : null}
+        )}
       </div>
     </section>
   );
