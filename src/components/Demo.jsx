@@ -86,6 +86,72 @@ const Demo = () => {
         </form>
       </div>
 
+                
+      <div class="w-full bg-white rounded-lg shadow-md">
+          <div class="hs-accordion-group">
+            <div class="hs-accordion active" id="hs-basic-heading-one">
+              <button class="hs-accordion-toggle hs-accordion-active:text-blue-600 px-6 py-3 inline-flex items-center gap-x-3 text-sm w-full font-semibold text-start text-gray-800 hover:text-gray-500 focus:outline-none focus:text-gray-500 rounded-lg disabled:opacity-50 disabled:pointer-events-none" aria-expanded="true" aria-controls="hs-basic-collapse-one">
+                <svg class="hs-accordion-active:hidden hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 block size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <svg class="hs-accordion-active:block hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 hidden size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                </svg>
+                Accordion #1
+              </button>
+              <div id="hs-basic-collapse-one" class="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="region" aria-labelledby="hs-basic-heading-one">
+                <div class="pb-4 px-6">
+                  <p class="text-sm text-gray-600">
+                    It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="hs-accordion" id="hs-basic-heading-two">
+              <button class="hs-accordion-toggle hs-accordion-active:text-blue-600 px-6 py-3 inline-flex items-center gap-x-3 text-sm w-full font-semibold text-start text-gray-800 hover:text-gray-500 focus:outline-none focus:text-gray-500 rounded-lg disabled:opacity-50 disabled:pointer-events-none" aria-expanded="false" aria-controls="hs-basic-collapse-two">
+                <svg class="hs-accordion-active:hidden hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 block size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <svg class="hs-accordion-active:block hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 hidden size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                </svg>
+                Accordion #2
+              </button>
+              <div id="hs-basic-collapse-two" class="hs-accordion-content hidden w-full overflow-hidden transition-[height] duration-300" role="region" aria-labelledby="hs-basic-heading-two">
+                <div class="pb-4 px-6">
+                  <p class="text-sm text-gray-600">
+                    It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="hs-accordion" id="hs-basic-heading-three">
+              <button class="hs-accordion-toggle hs-accordion-active:text-blue-600 px-6 py-3 inline-flex items-center gap-x-3 text-sm w-full font-semibold text-start text-gray-800 hover:text-gray-500 focus:outline-none focus:text-gray-500 rounded-lg disabled:opacity-50 disabled:pointer-events-none" aria-expanded="false" aria-controls="hs-basic-collapse-three">
+                <svg class="hs-accordion-active:hidden hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 block size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+                <svg class="hs-accordion-active:block hs-accordion-active:text-blue-600 hs-accordion-active:group-hover:text-blue-600 hidden size-4 text-gray-600 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                </svg>
+                Accordion #3
+              </button>
+              <div id="hs-basic-collapse-three" class="hs-accordion-content hidden w-full overflow-hidden transition-[height] duration-300" role="region" aria-labelledby="hs-basic-heading-three">
+                <div class="pb-4 px-6">
+                  <p class="text-sm text-gray-600">
+                    It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
       {/* Repo Tree and Side Panel */}
       <div className="flex flex-wrap my-10 max-w-full">
         {/* Left: Repo Tree */}
@@ -101,48 +167,6 @@ const Demo = () => {
             <RepoTreeView treeData={treeData} onFileClick={handleFileClick} />
           ) : null}
         </div>
-
-        {/* Right: AI Interaction Panel */}
-        {treeData && (
-          <div className="w-1/2 min-w-[300px] pl-6">
-            <div className="bg-white border border-gray-200 p-4 rounded-xl shadow-md dark:bg-neutral-800 dark:border-neutral-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI Interaction Panel</h3>
-
-              {/* Repository Summary */}
-              <div className="mt-4">
-                <h4 className="text-md font-bold">Repository Summary</h4>
-                <p className="text-sm text-gray-800 dark:text-gray-200 mt-2">
-                  {repoSummary}
-                </p>
-              </div>
-
-              {/* File Summary */}
-              {selectedFile && (
-                <div className="mt-6">
-                  <h4 className="text-md font-bold">File Summary</h4>
-                  <p className="text-sm text-gray-800 dark:text-gray-200 mt-2">
-                    Summary for {selectedFile.name}: This file contains {selectedFile.size} bytes.
-                  </p>
-                </div>
-              )}
-
-              {/* Chat Section for AI */}
-              <div className="mt-6">
-                <h4 className="text-md font-bold">Chat with AI</h4>
-                <div className="border-t border-gray-200 pt-4">
-                  <textarea
-                    placeholder="Ask the AI about the code..."
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring focus:ring-blue-300 dark:bg-neutral-700 dark:text-white"
-                    rows="4"
-                  ></textarea>
-                  <button className="mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600">
-                    Ask AI
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
