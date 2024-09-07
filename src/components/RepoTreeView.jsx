@@ -1,12 +1,18 @@
 import React, { useState } from 'react';
 
 // TreeNode component
-const TreeNode = ({ node }) => {
+const TreeNode = ({ node, selectedFile, setSelectedFile }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {
     if (node.type === 'dir') {
       setIsExpanded(!isExpanded);
+    }
+  };
+
+  const handleFileSelect = () => {
+    if (node.type !== 'dir') {
+      setSelectedFile(node.name);
     }
   };
 
@@ -36,7 +42,12 @@ const TreeNode = ({ node }) => {
             </svg>
           </button>
         )}
-        <div className="grow hs-accordion-selectable hs-accordion-selected:bg-gray-100 px-1.5 rounded-md cursor-pointer">
+        <div
+          className={`grow hs-accordion-selectable px-1.5 rounded-md cursor-pointer ${
+            selectedFile === node.name ? 'bg-gray-200' : ''
+          }`}
+          onClick={handleFileSelect}
+        >
           <div className="flex items-center gap-x-3">
             {node.type === 'dir' ? (
               <svg
@@ -80,7 +91,12 @@ const TreeNode = ({ node }) => {
         <div className="hs-accordion-content w-full overflow-hidden transition-[height] duration-300" role="group">
           <div className="hs-accordion-group ps-7 relative before:absolute before:top-0 before:start-3 before:w-0.5 before:-ms-px before:h-full before:bg-gray-300">
             {node.children.map((child, index) => (
-              <TreeNode key={index} node={child} />
+              <TreeNode
+                key={index}
+                node={child}
+                selectedFile={selectedFile}
+                setSelectedFile={setSelectedFile}
+              />
             ))}
           </div>
         </div>
@@ -89,8 +105,9 @@ const TreeNode = ({ node }) => {
   );
 };
 
-// RepoTreeView component with tabs
+// RepoTreeView component with tabs and file selection
 const RepoTreeView = ({ treeData }) => {
+  const [selectedFile, setSelectedFile] = useState(null);
   const [activeTab, setActiveTab] = useState('tab1');
 
   return (
@@ -99,7 +116,12 @@ const RepoTreeView = ({ treeData }) => {
       <div className="hs-accordion-treeview-root w-full md:w-1/3 border-r border-gray-200" role="tree" aria-orientation="vertical">
         <div className="hs-accordion-group" role="group" data-hs-accordion-always-open="">
           {treeData.map((node, index) => (
-            <TreeNode key={index} node={node} />
+            <TreeNode
+              key={index}
+              node={node}
+              selectedFile={selectedFile}
+              setSelectedFile={setSelectedFile}
+            />
           ))}
         </div>
       </div>
@@ -120,7 +142,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab1')}
                 role="tab"
               >
-                Summary
+                Tab 1
               </button>
               <button
                 type="button"
@@ -133,7 +155,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab2')}
                 role="tab"
               >
-                File
+                Tab 2
               </button>
               <button
                 type="button"
@@ -146,7 +168,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab3')}
                 role="tab"
               >
-                Ask AI
+                Tab 3
               </button>
             </nav>
           </div>
