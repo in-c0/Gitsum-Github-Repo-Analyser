@@ -17,10 +17,17 @@ const Demo = () => {
     return githubUrlPattern.test(url);
   };
 
+  const clearData = () => {
+    setTreeData(null);
+    setRepoSummary("");
+    setSelectedFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    clearData();
 
     if (!validateGitHubUrl(repo.url)) {
       setError("Invalid GitHub URL. Please enter a valid repository URL.");
