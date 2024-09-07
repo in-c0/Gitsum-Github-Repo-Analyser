@@ -5,31 +5,44 @@ const octokit = new Octokit({
 });
 
 export const processDataForTreeView = (data) => {
-  const buildTree = (items) => {
-    return items.map(item => {
-      const node = {
-        name: item.path.split('/').pop(),
-        path: item.path,
-        type: item.type === 'blob' ? 'file' : 'dir',
-        size: item.size,
-        sha: item.sha,
-      };
-
-      if (item.type === 'tree') {
-        node.children = []; // Placeholder for future recursive calls
-      }
-
-      return node;
+  const buildTree = (items, path = '') => {
+    const tree = {};
+    items.forEach(item => {
+      const parts = item.path.split('/');
+      let currentLevel = tree;
+      
+      parts.forEach((part, index) => {
+        if (!currentLevel[part]) {
+          currentLevel[part] = {
+            name: part,
+            path: parts.slice(0, index + 1).join('/'),
+            type: index === parts.length - 1 ? (item.type === 'blob' ? 'file' : 'dir') : 'dir',
+            size: item.size,
+            sha: item.sha,
+            children: {},
+          };
+        }
+        currentLevel = currentLevel[part].children;
+      });
     });
+
+    const flattenTree = (node) => {
+      const children = Object.values(node.children).map(flattenTree);
+      const { children: _, ...nodeWithoutChildren } = node;
+      return {
+        ...nodeWithoutChildren,
+        children: children.length > 0 ? children : undefined,
+      };
+    };
+
+    return Object.values(tree).map(flattenTree);
   };
 
   return buildTree(data);
 };
 
-// Fetch the entire repository tree recursively
 export const fetchGitHubTree = async (owner, repo) => {
   try {
-    // Fetch the repository tree recursively using Octokit
     const response = await octokit.git.getTree({
       owner,
       repo,
@@ -39,7 +52,6 @@ export const fetchGitHubTree = async (owner, repo) => {
 
     return processDataForTreeView(response.data.tree);
   } catch (error) {
-    // Handle GitHub API errors (e.g., rate limiting, private repo access)
     if (error.status === 404) {
       return { error: "This repository is either private or does not exist. Only public repositories are supported." };
     } else if (error.status === 403) {
