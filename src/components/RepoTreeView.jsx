@@ -89,8 +89,10 @@ const TreeNode = ({ node }) => {
   );
 };
 
-// RepoTreeView component
+// RepoTreeView component with tabs
 const RepoTreeView = ({ treeData }) => {
+  const [activeTab, setActiveTab] = useState('tab1');
+
   return (
     <div className="flex flex-col md:flex-row bg-white p-4 rounded-lg shadow-md">
       {/* Left panel - Treeview */}
@@ -102,13 +104,77 @@ const RepoTreeView = ({ treeData }) => {
         </div>
       </div>
 
-      {/* Right panel - Content */}
+      {/* Right panel - Tabbed content */}
       <div className="w-full md:w-2/3 p-4">
-        <h2 className="text-lg font-semibold text-gray-800">File Content Area</h2>
-        <p className="text-gray-600">
-          Here you can display the content of the selected file or folder, or provide additional details about the
-          structure.
-        </p>
+        <div className="w-full bg-white rounded-lg shadow-md">
+          <div className="border-b border-gray-200 px-4">
+            <nav className="flex gap-x-2" aria-label="Tabs" role="tablist" aria-orientation="horizontal">
+              <button
+                type="button"
+                className={`hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-4 px-1 inline-flex items-center gap-x-2 border-b-2 text-sm whitespace-nowrap ${
+                  activeTab === 'tab1'
+                    ? 'border-blue-600 text-blue-600 font-semibold'
+                    : 'border-transparent text-gray-500 hover:text-blue-600'
+                }`}
+                aria-selected={activeTab === 'tab1'}
+                onClick={() => setActiveTab('tab1')}
+                role="tab"
+              >
+                Summary
+              </button>
+              <button
+                type="button"
+                className={`hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-4 px-1 inline-flex items-center gap-x-2 border-b-2 text-sm whitespace-nowrap ${
+                  activeTab === 'tab2'
+                    ? 'border-blue-600 text-blue-600 font-semibold'
+                    : 'border-transparent text-gray-500 hover:text-blue-600'
+                }`}
+                aria-selected={activeTab === 'tab2'}
+                onClick={() => setActiveTab('tab2')}
+                role="tab"
+              >
+                File
+              </button>
+              <button
+                type="button"
+                className={`hs-tab-active:font-semibold hs-tab-active:border-blue-600 hs-tab-active:text-blue-600 py-4 px-1 inline-flex items-center gap-x-2 border-b-2 text-sm whitespace-nowrap ${
+                  activeTab === 'tab3'
+                    ? 'border-blue-600 text-blue-600 font-semibold'
+                    : 'border-transparent text-gray-500 hover:text-blue-600'
+                }`}
+                aria-selected={activeTab === 'tab3'}
+                onClick={() => setActiveTab('tab3')}
+                role="tab"
+              >
+                Ask AI
+              </button>
+            </nav>
+          </div>
+
+          <div className="mt-3 p-4">
+            {activeTab === 'tab1' && (
+              <div id="basic-tabs-1" role="tabpanel" aria-labelledby="basic-tabs-item-1">
+                <p className="text-gray-500">
+                  This is the <em className="font-semibold text-gray-800">first</em> item's tab body.
+                </p>
+              </div>
+            )}
+            {activeTab === 'tab2' && (
+              <div id="basic-tabs-2" role="tabpanel" aria-labelledby="basic-tabs-item-2">
+                <p className="text-gray-500">
+                  This is the <em className="font-semibold text-gray-800">second</em> item's tab body.
+                </p>
+              </div>
+            )}
+            {activeTab === 'tab3' && (
+              <div id="basic-tabs-3" role="tabpanel" aria-labelledby="basic-tabs-item-3">
+                <p className="text-gray-500">
+                  This is the <em className="font-semibold text-gray-800">third</em> item's tab body.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
