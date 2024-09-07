@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // TreeNode component
-const TreeNode = ({ node, selectedFile, setSelectedFile }) => {
+const TreeNode = ({ node, selectedFile, setSelectedFile, fetchFileContent }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const toggleExpand = () => {
@@ -13,6 +13,7 @@ const TreeNode = ({ node, selectedFile, setSelectedFile }) => {
   const handleFileSelect = () => {
     if (node.type !== 'dir') {
       setSelectedFile(node.name);
+      fetchFileContent(node.path); // Pass the file path to fetch the content
     }
   };
 
@@ -96,6 +97,7 @@ const TreeNode = ({ node, selectedFile, setSelectedFile }) => {
                 node={child}
                 selectedFile={selectedFile}
                 setSelectedFile={setSelectedFile}
+                fetchFileContent={fetchFileContent}
               />
             ))}
           </div>
@@ -105,10 +107,24 @@ const TreeNode = ({ node, selectedFile, setSelectedFile }) => {
   );
 };
 
-// RepoTreeView component with tabs and file selection
+// RepoTreeView component with tabs, file selection, and content fetching
 const RepoTreeView = ({ treeData }) => {
   const [selectedFile, setSelectedFile] = useState(null);
+  const [fileContent, setFileContent] = useState('');
   const [activeTab, setActiveTab] = useState('tab1');
+
+  // Function to fetch file content
+  const fetchFileContent = async (filePath) => {
+    try {
+      // Replace with your Git file fetching logic (e.g., GitHub API or custom backend API)
+      const response = await fetch(`/api/getFileContent?path=${filePath}`); // Example API
+      const data = await response.text();
+      setFileContent(data);
+    } catch (error) {
+      console.error('Error fetching file content:', error);
+      setFileContent('Error fetching file content');
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row bg-white p-4 rounded-lg shadow-md">
@@ -121,6 +137,7 @@ const RepoTreeView = ({ treeData }) => {
               node={node}
               selectedFile={selectedFile}
               setSelectedFile={setSelectedFile}
+              fetchFileContent={fetchFileContent}
             />
           ))}
         </div>
@@ -142,7 +159,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab1')}
                 role="tab"
               >
-                Tab 1
+                About File
               </button>
               <button
                 type="button"
@@ -155,7 +172,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab2')}
                 role="tab"
               >
-                Tab 2
+                About Repository
               </button>
               <button
                 type="button"
@@ -168,7 +185,7 @@ const RepoTreeView = ({ treeData }) => {
                 onClick={() => setActiveTab('tab3')}
                 role="tab"
               >
-                Tab 3
+                Ask AI
               </button>
             </nav>
           </div>
@@ -176,22 +193,22 @@ const RepoTreeView = ({ treeData }) => {
           <div className="mt-3 p-4">
             {activeTab === 'tab1' && (
               <div id="basic-tabs-1" role="tabpanel" aria-labelledby="basic-tabs-item-1">
-                <p className="text-gray-500">
-                  This is the <em className="font-semibold text-gray-800">first</em> item's tab body.
-                </p>
+                <pre className="text-gray-500 whitespace-pre-wrap">
+                  {fileContent || 'Select a file to view its content.'}
+                </pre>
               </div>
             )}
             {activeTab === 'tab2' && (
               <div id="basic-tabs-2" role="tabpanel" aria-labelledby="basic-tabs-item-2">
                 <p className="text-gray-500">
-                  This is the <em className="font-semibold text-gray-800">second</em> item's tab body.
+                  This is the <em className="font-semibold text-gray-800">second</em> tab.
                 </p>
               </div>
             )}
             {activeTab === 'tab3' && (
               <div id="basic-tabs-3" role="tabpanel" aria-labelledby="basic-tabs-item-3">
                 <p className="text-gray-500">
-                  This is the <em className="font-semibold text-gray-800">third</em> item's tab body.
+                  This is the <em className="font-semibold text-gray-800">third</em> tab.
                 </p>
               </div>
             )}
