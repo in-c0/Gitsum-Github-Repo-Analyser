@@ -26,3 +26,4 @@ dist-ssr
 
 # submodules
 api/*
+.vercel

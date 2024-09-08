@@ -71,6 +71,20 @@ Domain: https://resonant-starburst-ce7ed2.netlify.app
 Thanks to: https://dub.co/ and https://github.com/RiteshKumarShukla/AI-Summarizer/tree/main  for website design inspiration
 
 
+To pull the latest changes and update submodules:
+
+```bash
+git pull --recurse-submodules
+git submodule update --remote
+```
+This ensures that the submodule is updated to the latest commit as per the parent repository.
+
+If the submodule isn’t initialized yet:
+```bash
+git submodule init
+git submodule update --remote
+```
+
 In `services/article.js`, the current setup is using **Redux Toolkit Query** (createApi and fetchBaseQuery) to make API requests to a service hosted on RapidAPI. 
 The API will extract repository data from URL and summarise the key files.
 
