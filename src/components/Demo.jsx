@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { linkIcon, loader } from "../assets";
-import { fetchGitHubTree, fetchGitHubFileContent } from '../utils/processDataForTreeView';  // import the file fetching function
+import { fetchGitHubTree, fetchGitHubFileContent, fetchRepoSummary } from '../utils/processDataForTreeView';  // import the file fetching function
 import RepoTreeView from './RepoTreeView';
 
 
@@ -45,8 +45,12 @@ const Demo = () => {
       setError(result.error);
     } else {
       setTreeData(result);
-      // Placeholder for repo summary
-      setRepoSummary(`Summary for ${repoName}: This repository contains ${result.length} files and directories.`);
+      const summary = await fetchRepoSummary(owner, repoName);
+      if (summary.error) {
+        setError(summary.error);
+      } else {
+        setRepoSummary(summary);
+      }
     }
 
     setIsLoading(false);
@@ -102,6 +106,16 @@ const Demo = () => {
         </form>
       </div>
 
+
+      {/* Display Results */}
+      {repoSummary && (
+        <div className="w-full mt-4">
+          <h3 className="text-lg font-bold">Summary</h3>
+          <p>{repoSummary}</p>
+        </div>
+      )}
+
+
       <div className="flex flex-wrap my-10 max-w-full">
         {/* Left: Repo Tree */}
         <div className="flex-grow max-h-screen overflow-auto">
@@ -116,20 +130,6 @@ const Demo = () => {
             <RepoTreeView treeData={treeData} onFileClick={handleFileClick} owner={owner} repo={repoName} />
           ) : null}
         </div>
-
-        {selectedFile && (
-          <div className="w-full">
-            <h3 className="text-lg font-bold mt-4">File Content</h3>
-            <pre>{fileContent}</pre>
-          </div>
-        )}
-
-        {repoSummary && (
-          <div className="w-full mt-4">
-            <h3 className="text-lg font-bold">Summary</h3>
-            <p>{repoSummary}</p>
-          </div>
-        )}
       </div>
     </section>
   );

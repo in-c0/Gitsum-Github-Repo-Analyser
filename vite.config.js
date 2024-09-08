@@ -10,9 +10,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://your-vercel-deployment-url.vercel.app',
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        rewrite: (path) => path.replace(/^\/api/, '/api')
       }
     }
   }

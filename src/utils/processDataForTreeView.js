@@ -1,4 +1,5 @@
 import { Octokit } from '@octokit/rest';
+import axios from 'axios';
 
 const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN,
@@ -80,5 +81,27 @@ export const fetchGitHubTree = async (owner, repo) => {
     } else {
       return { error: "An error occurred while fetching the repository data. Please try again." };
     }
+  }
+};
+
+export const fetchRepoSummary = async (owner, repo) => {
+  try {
+    console.log("GITHUB_API_TOKEN:", import.meta.env.GITHUB_API_TOKEN); // Add this to check if the token is loaded
+    console.log("OPENAI_API_KEY:", import.meta.env.OPENAI_API_KEY); // Add this to check if the token is loaded
+    
+
+    const baseUrl = window.location.origin;
+    const response = await axios.get(`${baseUrl}/api/github/repo`, {
+      params: { owner, repo }
+    });
+
+    if (response.data && response.data.summary) {
+      return response.data.summary;
+    } else {
+      throw new Error('No summary returned from the API');
+    }
+  } catch (error) {
+    console.error('Error fetching repo summary:', error);
+    return { error: 'Failed to fetch repository summary' };
   }
 };

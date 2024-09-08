@@ -13,6 +13,8 @@
     "@octokit/rest": "^21.0.2",
     "@preline/accordion": "^2.4.1",
     "@reduxjs/toolkit": "^1.9.5",
+    "axios": "^1.7.7",
+    "openai": "^4.58.1",
     "postcss": "^8.4.23",
     "preline": "^2.4.1",
     "react": "^18.2.0",
