@@ -18,11 +18,12 @@ const Hero = () => {
             </nav>
 
             <h1 className='head_text'>
-                Unlock GitHub insights with <br className='max-md:hidden' />
-                <span className='orange_gradient '>GRAKKEN</span>
+                <span className='orange_gradient '>GITSUM</span> <br></br>
+                #Git #Summary #AI <br className='max-md:hidden' />
+                
             </h1>
             <h2 className='desc'>
-                Analyze, summarize, and optimize repositories
+                Git Repo Summariser, Analyser, Chatbot Q&As
             </h2>
 
         </header>
