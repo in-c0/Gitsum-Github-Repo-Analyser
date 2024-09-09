@@ -91,3 +91,5 @@ The API will extract repository data from URL and summarise the key files.
 --
 
 What other features would you like to see? Got any feedback / bug report? Send message at ___
+
+FINALLY! Frontend and backend are connected on vercel deployment! (separate repo, each has its own deployment, backend is a submodule, vercel.json is used to refer to the backend URL)
