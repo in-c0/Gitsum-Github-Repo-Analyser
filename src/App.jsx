@@ -1,5 +1,6 @@
 import Hero from './components/Hero';
 import Demo from './components/Demo';
+import ErrorBoundary from './components/ErrorBoundary';
 import "preline/preline";
 import './App.css';
 
@@ -21,7 +22,10 @@ const App = () => {
             </div>
             <div className="app">
                 <Hero />
-                <Demo />
+
+                <ErrorBoundary>
+                    <Demo />
+                </ErrorBoundary>
             </div>
         </main>
     )
