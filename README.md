@@ -1,3 +1,6 @@
+Don't mind this project - renamed to Gitsum. It's a draft dump but I'll incorporate some other APIs into a separate repo and service it live sometime soon.
+
+
 remember to join developer program once MVP built
 https://docs.github.com/en/get-started/exploring-integrations/github-developer-program
 
