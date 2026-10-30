@@ -1,35 +1,33 @@
-import React, { useState } from 'react';
+import React from "react";
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, errorInfo: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error) {
-    // Update state so the next render will show the fallback UI.
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    // You can also log the error to an error reporting service
-    console.error("Error occurred in component: ", error, errorInfo);
-    this.setState({ errorInfo });
+    console.error("[gitsum] render error", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
-      // Fallback UI
       return (
-        <div>
-          <h2>Something went wrong.</h2>
-          <details>
-            {this.state.errorInfo && this.state.errorInfo.componentStack.toString()}
-          </details>
+        <div className="error-state" role="alert">
+          <h2>This page hit an unexpected error.</h2>
+          <p>Reload to try again. If it keeps happening, open an issue on GitHub with the repository you were viewing.</p>
+          <div className="error-actions">
+            <button type="button" className="btn-secondary" onClick={() => window.location.reload()}>
+              Reload
+            </button>
+          </div>
         </div>
       );
     }
-
     return this.props.children;
   }
 }

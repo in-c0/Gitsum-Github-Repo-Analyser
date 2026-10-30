@@ -1,9 +1,12 @@
 {
-    "rewrites": [
-      {
-        "source": "/api/(.*)",
-        "destination": "https://grakken-backend-api.vercel.app/api/$1"
-      }
-    ]
-  }
-  
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://grakken-backend-api.vercel.app/api/$1"
+    },
+    {
+      "source": "/:owner/:repo",
+      "destination": "/index.html"
+    }
+  ]
+}
