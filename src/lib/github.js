@@ -79,7 +79,7 @@ function writeCache(key, v) {
 function formatReset(epochSeconds) {
   if (!epochSeconds) return null;
   const mins = Math.max(1, Math.ceil((epochSeconds * 1000 - Date.now()) / 60000));
-  return mins;
+  return mins <= 60 ? mins : null; // GitHub's window is one hour; anything else is clock skew
 }
 
 async function apiGet(path, { signal } = {}) {
@@ -101,7 +101,7 @@ async function apiGet(path, { signal } = {}) {
     throw new GitsumError(
       "rate_limited",
       "GitHub's hourly limit for anonymous requests was reached.",
-      mins ? `It resets in about ${mins} min. Repositories you already opened still work.` : "Try again in a little while."
+      `${mins ? `It resets in about ${mins} min` : "It resets within the hour"}. Repositories you already opened still work.`
     );
   }
   if (res.status === 404) {

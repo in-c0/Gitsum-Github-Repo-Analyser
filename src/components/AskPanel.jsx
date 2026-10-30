@@ -51,6 +51,8 @@ const Answer = ({ repo, msg }) => {
 const AskPanel = ({ analysis }) => {
   const { repo, overview, messages, asking, ask } = analysis;
   const [value, setValue] = useState("");
+  const [inView, setInView] = useState(true);
+  const panelRef = useRef(null);
   const listRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -58,6 +60,20 @@ const AskPanel = ({ analysis }) => {
     const el = listRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
+
+  // On narrow screens the panel sits below the overview; a docked button jumps to it.
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.15 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const jumpToPanel = () => {
+    panelRef.current?.scrollIntoView({ block: "start" });
+    inputRef.current?.focus({ preventScroll: true });
+  };
 
   const submit = (text) => {
     const q = (text ?? value).trim();
@@ -67,61 +83,68 @@ const AskPanel = ({ analysis }) => {
   };
 
   return (
-    <aside className="ask" aria-label={`Ask about ${repo.fullName}`}>
-      <h2 className="ask-title">Ask about this repo</h2>
-      <div className="ask-thread" ref={listRef}>
-        {messages.length === 0 ? (
-          <ul className="suggestions">
-            {suggestedQuestions(overview).map((q) => (
-              <li key={q}>
-                <button type="button" className="suggestion" onClick={() => submit(q)}>
-                  {q}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          messages.map((m) =>
-            m.role === "user" ? (
-              <p key={m.id} className="question">
-                {m.text}
-              </p>
-            ) : (
-              <Answer key={m.id} repo={repo} msg={m} />
+    <>
+      <aside id="ask" ref={panelRef} className="ask" aria-label={`Ask about ${repo.fullName}`}>
+        <h2 className="ask-title">Ask about this repo</h2>
+        <div className="ask-thread" ref={listRef}>
+          {messages.length === 0 ? (
+            <ul className="suggestions">
+              {suggestedQuestions(overview).map((q) => (
+                <li key={q}>
+                  <button type="button" className="suggestion" onClick={() => submit(q)}>
+                    {q}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            messages.map((m) =>
+              m.role === "user" ? (
+                <p key={m.id} className="question">
+                  {m.text}
+                </p>
+              ) : (
+                <Answer key={m.id} repo={repo} msg={m} />
+              ),
             )
-          )
-        )}
-      </div>
-      <form
-        className="ask-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit();
-        }}
-      >
-        <label htmlFor="ask-input" className="sr-only">
-          Your question
-        </label>
-        <textarea
-          id="ask-input"
-          ref={inputRef}
-          className="ask-input"
-          rows={1}
-          placeholder="Where is auth handled?"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              submit();
-            }
+          )}
+        </div>
+        <form
+          className="ask-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
           }}
-        />
-        <button type="submit" className="ask-submit" disabled={asking || !value.trim()}>
-          Ask
+        >
+          <label htmlFor="ask-input" className="sr-only">
+            Your question
+          </label>
+          <textarea
+            id="ask-input"
+            ref={inputRef}
+            className="ask-input"
+            rows={1}
+            placeholder="Where is auth handled?"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                submit();
+              }
+            }}
+          />
+          <button type="submit" className="ask-submit" disabled={asking || !value.trim()}>
+            Ask
+          </button>
+        </form>
+      </aside>
+      {!inView && (
+        <button type="button" className="ask-jump" onClick={jumpToPanel}>
+          Ask about this repo
         </button>
-      </form>
-    </aside>
+      )}
+    </>
   );
 };
 

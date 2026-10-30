@@ -103,7 +103,8 @@ export function useRepoAnalysis() {
           ? { code: err.code, message: err.message, hint: err.hint }
           : { code: "unknown", message: "Something went wrong while reading the repository.", hint: "Try again in a moment." }
       );
-      console.error("[gitsum]", err);
+      if (err instanceof GitsumError) console.info("[gitsum]", err.code, err.message);
+      else console.error("[gitsum]", err);
     }
   }, []);
 

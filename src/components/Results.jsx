@@ -226,7 +226,7 @@ const Results = ({ analysis, onOpen, onRetry }) => {
                       {d.name}/
                     </a>
                     <span className="file-reason">{d.meaning || "—"}</span>
-                    <span className="dir-count">{d.count.toLocaleString()} files</span>
+                    <span className="dir-count">{d.count.toLocaleString()} {d.count === 1 ? "file" : "files"}</span>
                   </li>
                 ))}
               </ul>

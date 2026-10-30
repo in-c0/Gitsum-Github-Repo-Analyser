@@ -140,7 +140,7 @@ export function rankKeyFiles(files, limit = 8) {
       const deploy = /^(Dockerfile|docker-compose|compose|vercel\.json|netlify\.toml)/.test(base);
       score = deploy ? 40 : 85;
       reason = deploy ? "Deployment config" : "Dependencies & scripts";
-    } else if (ENTRY_NAMES.test(base) && !/\.(css|scss|sass|less|json|md)$/i.test(base) && !/(^|\/)assets\//.test(path)) {
+    } else if (ENTRY_NAMES.test(base) && LANG_BY_EXT[extOf(path)] && !/\.(css|scss|sass|less)$/i.test(base) && !/(^|\/)(assets|\.github)\//.test(path) && !TEST_PATH.test(path)) {
       score = 70;
       reason = "Likely entry point";
     } else if (/^(routes?|router|handlers?|controllers?|models?|schema|store|config|settings|constants)\.[a-z]+$/i.test(base)) {
@@ -154,7 +154,7 @@ export function rankKeyFiles(files, limit = 8) {
       reason = /ARCHITECTURE|DESIGN/i.test(base) ? "Architecture notes" : "Project docs";
     } else if (LANG_BY_EXT[extOf(path)]) {
       score = 20;
-      reason = "Source file";
+      reason = TEST_PATH.test(path) ? "Tests" : "Source file";
     } else continue;
 
     score -= depth * 7;
@@ -244,7 +244,11 @@ export function readmeIntro(md) {
       buf = [];
       continue;
     }
-    if (/^(\||>?\s*\[!|[-*]\s*\[[ x]\])/.test(line)) continue;
+    if (/^(\||>?\s*\[!|[-*+]\s|\d+[.)]\s)/.test(line)) {
+      if (buf.length) paras.push(buf.join(" "));
+      buf = [];
+      continue;
+    }
     buf.push(line);
   }
   if (buf.length) paras.push(buf.join(" "));
@@ -328,14 +332,22 @@ export async function buildOverview(repoData, { signal } = {}) {
 // ---------- question answering without AI ----------
 
 const STOP = new Set(
-  "a an the is are was were be been do does did how what where which who why when can could should would i you we it its this that these those of in on at to for from with by and or not repo repository project code file files use used using there here about into does does it me my your".split(
+  "a an the is are was were be been do does did how what where which who why when can could should would i you we it its this that these those of in on at to for from with by and or not repo repository project code file files use used using there here about into me my your work works happen get got".split(
     " "
   )
 );
 
 export function tokenize(text) {
-  return (text.toLowerCase().match(/[a-z0-9_$]+/g) || [])
-    .flatMap((t) => [t, ...t.split("_").filter(Boolean)])
+  // camelCase / PascalCase identifiers also count as their parts: isPlainObject → isplainobject, plain, object
+  const raw = String(text).match(/[A-Za-z0-9_$]+/g) || [];
+  const out = [];
+  for (const word of raw) {
+    const lower = word.toLowerCase();
+    out.push(lower);
+    const parts = word.split(/_|(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])/).filter(Boolean);
+    if (parts.length > 1) for (const part of parts) out.push(part.toLowerCase());
+  }
+  return out
     .map((t) => (t.length > 4 ? t.replace(/(ing|ed|es|s)$/, "") : t))
     .filter((t) => t.length > 1 && !STOP.has(t));
 }
@@ -380,9 +392,26 @@ export async function buildSearchIndex(repoData, overview, { signal, maxFiles = 
   return { docs, df, avgLen, pathList: repoData.files.map((f) => f.path) };
 }
 
+const escapeRe = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Identifiers the user typed (isPlainObject, parse_args, UserService) — used to find where they are defined. */
+function queryIdentifiers(query) {
+  return [...new Set((query.match(/[A-Za-z_$][A-Za-z0-9_$]{2,}/g) || []).filter((w) => !STOP.has(w.toLowerCase()) && (/[A-Z_$]/.test(w.slice(1)) || /\(\)$/.test(w))))];
+}
+
+function definitionLine(text, identifiers) {
+  if (!identifiers.length) return -1;
+  const re = new RegExp(
+    `(^|\\s)(export\\s+)?(default\\s+)?(async\\s+)?(function\\*?|def|class|interface|type|struct|enum|trait|fn|func|const|let|var|val|public|private|static)\\s+(${identifiers.map(escapeRe).join("|")})\\b`,
+    "i"
+  );
+  return text.split("\n").findIndex((line) => re.test(line));
+}
+
 function searchIndex(index, query, k = 3) {
   const q = [...new Set(tokenize(query))];
   if (!q.length) return [];
+  const idents = queryIdentifiers(query);
   const N = index.docs.length;
   const k1 = 1.4;
   const b = 0.75;
@@ -396,7 +425,10 @@ function searchIndex(index, query, k = 3) {
         score += idf * ((f * (k1 + 1)) / (f + k1 * (1 - b + (b * d.len) / index.avgLen)));
       }
       if (q.some((t) => d.path.toLowerCase().includes(t))) score *= 1.3;
-      return { d, score };
+      if (TEST_PATH.test(d.path)) score *= 0.6; // prefer the implementation over its tests
+      const def = score > 0 ? definitionLine(d.text, idents) : -1;
+      if (def >= 0) score *= 3; // where it is defined beats where it is used
+      return { d, score, def };
     })
     .filter((r) => r.score > 0.5)
     .sort((a, b) => b.score - a.score);
@@ -407,23 +439,27 @@ function searchIndex(index, query, k = 3) {
     picked.push(r);
     if (picked.length >= k) break;
   }
-  return picked.map(({ d }) => ({ path: d.path, startLine: d.startLine, endLine: d.endLine, title: d.title, snippet: bestSnippet(d.text, q) }));
+  return picked.map(({ d, def }) => ({ path: d.path, startLine: d.startLine, endLine: d.endLine, title: d.title, snippet: bestSnippet(d.text, q, def) }));
 }
 
-function bestSnippet(text, qTokens, size = 10) {
+function bestSnippet(text, qTokens, preferLine = -1, size = 10) {
   const lines = text.split("\n");
   let best = 0;
-  let bestScore = -1;
-  for (let i = 0; i < lines.length; i++) {
-    const window = lines.slice(i, i + size).join(" ").toLowerCase();
-    const s = qTokens.reduce((acc, t) => acc + (window.includes(t) ? 1 : 0), 0);
-    if (s > bestScore) {
-      bestScore = s;
-      best = i;
+  if (preferLine >= 0) {
+    best = Math.max(0, preferLine - 1);
+  } else {
+    let bestScore = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const window = lines.slice(i, i + size).join(" ").toLowerCase();
+      const s = qTokens.reduce((acc, t) => acc + (window.includes(t) ? 1 : 0), 0);
+      if (s > bestScore) {
+        bestScore = s;
+        best = i;
+      }
     }
   }
+  while (best < lines.length - 1 && !lines[best].trim()) best++;
   const out = lines.slice(best, best + size);
-  while (out.length && !out[0].trim()) out.shift();
   return { text: out.join("\n").trimEnd(), offset: best };
 }
 
