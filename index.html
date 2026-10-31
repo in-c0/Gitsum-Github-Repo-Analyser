@@ -2,23 +2,21 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      href="https://api.fontshare.com/v2/css?f[]=satoshi@1,900,700,500,300,400&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="description" content="Paste a public GitHub repository and get what it does, how to run it, which files matter, and answers that point at the code." />
+    <meta name="color-scheme" content="light" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
-    <title>AI Summarizer</title>
+    <title>Gitsum — understand a GitHub repo before you clone it</title>
   </head>
   <body>
-    <div id="root"></div>    
-    <script src="./node_modules/preline/dist/preline.js"></script>
+    <div id="root"></div>
+    <!-- preline is bundled by Vite via `import "preline/preline"` in src/App.jsx -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

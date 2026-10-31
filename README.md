@@ -4,6 +4,23 @@ Don't mind this project - renamed to Gitsum. It's a draft dump but I'll incorpor
 remember to join developer program once MVP built
 https://docs.github.com/en/get-started/exploring-integrations/github-developer-program
 
+## How the app works now (Oct 2026)
+
+- **No token needed for the core flow.** The browser reads repo metadata and the file tree from GitHub's public REST API (2 calls per repo, cached 10 min, 60 calls/hour per visitor IP) and file contents from `raw.githubusercontent.com` (not rate-limited the same way). Code: `src/lib/github.js`.
+- **Overview without AI.** README intro, stack, languages, ranked key files, run instructions and folder structure are computed locally. Code: `src/lib/analyze.js`.
+- **Q&A without AI.** Common questions are answered from the overview; anything else searches the key files (BM25, definition-aware) and returns `path:line` citations that open on GitHub.
+- **AI is optional.** `/api/*` is rewritten to the backend (`vercel.json`). If `GET /api/github/summary` streams, the AI summary appears; if the backend fails, the page says so and keeps working. Code: `src/lib/ai.js`.
+- **Shareable URLs.** `/<owner>/<repo>` (or `?repo=owner/repo`) opens a repo directly, so replacing `github.com` with this site's domain works.
+
+### Backend contract (for `grakken-backend-api`)
+
+| Endpoint | Status | Response |
+|---|---|---|
+| `GET /api/github/summary?owner=&repo=` | used today | `text/event-stream`, `data: <text>` chunks, ends with `data: [DONE]` |
+| `POST /api/github/ask` `{ owner, repo, question, context: [{ path, startLine, snippet }] }` | proposed | same SSE format; until it exists the UI falls back to code search |
+
+Errors should be JSON `{ "error": "..." }` with a 4xx/5xx status (e.g. `503 { "error": "OPENAI_API_KEY is not configured" }`) instead of crashing the function.
+
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
 
 
