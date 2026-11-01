@@ -1,39 +1,15 @@
 import { useState } from "react";
 import RepoInput from "./RepoInput";
 import AskPanel from "./AskPanel";
-import Markdown from "./Markdown";
-import { githubFileUrl } from "../lib/github";
+import { HealthPanel, LanguageDonut, ReadingPath, StackChips, StatStrip, StructureTreemap } from "./Infographic";
 
 const STEPS = ["Reading repository", "Ranking key files"];
 
-const SECTIONS = [
-  { id: "overview", label: "Overview" },
-  { id: "run", label: "Run it" },
-  { id: "key-files", label: "Key files" },
-  { id: "stack", label: "Stack" },
-  { id: "structure", label: "Structure" },
-];
-
-const LANG_COLORS = ["#2C44D4", "#1F9D74", "#E0A100", "#C2417C", "#6B7280", "#7C5CD6"];
-
-function timeAgo(iso) {
-  if (!iso) return "";
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days < 1) return "today";
-  if (days < 2) return "yesterday";
-  if (days < 45) return `${days} days ago`;
-  const months = Math.round(days / 30);
-  if (months < 18) return `${months} months ago`;
-  return `${Math.round(days / 365)} years ago`;
-}
-
-const compact = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10_000 ? 0 : 1)}k` : String(n));
-
-function toMarkdown(repo, overview, ai) {
+function toMarkdown(repo, overview) {
   const lines = [`# ${repo.fullName}`, "", overview.oneLiner || "", ""];
-  if (ai.status === "done" && ai.text) lines.push("## Summary", "", ai.text.trim(), "");
   if (overview.run) lines.push("## Run it", "", "```sh", overview.run.code, "```", "");
-  if (overview.keyFiles.length) lines.push("## Key files", "", ...overview.keyFiles.map((f) => `- \`${f.path}\` — ${f.reason}`), "");
+  if (overview.keyFiles.length) lines.push("## Reading path", "", ...overview.keyFiles.slice(0, 6).map((f, i) => `${i + 1}. \`${f.path}\` — ${f.reason}`), "");
+  if (overview.languages.length) lines.push("## Languages", "", overview.languages.map((l) => `${l.name} ${Math.round(l.pct)}%`).join(" · "), "");
   if (overview.stack.length) lines.push("## Stack", "", overview.stack.join(", "), "");
   if (overview.structure.dirs.length) lines.push("## Structure", "", ...overview.structure.dirs.map((d) => `- \`${d.name}/\` — ${d.meaning || `${d.count} files`}`), "");
   lines.push(`Source: ${repo.htmlUrl}`);
@@ -71,17 +47,18 @@ const ErrorState = ({ error, onRetry, onOpen }) => (
   </div>
 );
 
-const Section = ({ id, title, children }) => (
-  <section id={id} className="section" aria-labelledby={`${id}-h`}>
-    <h2 id={`${id}-h`} className="section-title">
-      {title}
-    </h2>
+const Card = ({ id, title, wide, children, aside }) => (
+  <section id={id} className={`ig-card ${wide ? "is-wide" : ""}`} aria-labelledby={`${id}-h`}>
+    <header className="ig-card-head">
+      <h2 id={`${id}-h`}>{title}</h2>
+      {aside}
+    </header>
     {children}
   </section>
 );
 
-const Results = ({ analysis, onOpen, onRetry }) => {
-  const { status, step, error, repo, overview, ai } = analysis;
+const Results = ({ analysis, onOpen, onRetry, onUpgrade }) => {
+  const { status, step, error, repo, overview } = analysis;
   const [copied, setCopied] = useState(false);
 
   if (status === "error") return <ErrorState error={error} onRetry={onRetry} onOpen={onOpen} />;
@@ -96,7 +73,7 @@ const Results = ({ analysis, onOpen, onRetry }) => {
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(toMarkdown(repo, overview, ai));
+      await navigator.clipboard.writeText(toMarkdown(repo, overview));
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -114,13 +91,7 @@ const Results = ({ analysis, onOpen, onRetry }) => {
               {repo.repo}
             </a>
           </h1>
-          <p className="repo-meta">
-            <span>{compact(repo.stars)} stars</span>
-            {repo.license && <span>{repo.license}</span>}
-            {repo.pushedAt && <span>Updated {timeAgo(repo.pushedAt)}</span>}
-            <span>{overview.fileCount.toLocaleString()} files</span>
-            {repo.archived && <span className="tag-warn">Archived</span>}
-          </p>
+          {overview.oneLiner && <p className="repo-oneliner">{overview.oneLiner}</p>}
         </div>
         <div className="repo-actions">
           <RepoInput key={repo.fullName} onSubmit={onOpen} compact />
@@ -130,113 +101,47 @@ const Results = ({ analysis, onOpen, onRetry }) => {
         </div>
       </div>
 
+      <StatStrip repo={repo} overview={overview} />
+
       <div className="layout">
-        <nav className="toc" aria-label="Sections">
-          {SECTIONS.filter((s) => s.id !== "run" || overview.run).map((s) => (
-            <a key={s.id} href={`#${s.id}`}>
-              {s.label}
-            </a>
-          ))}
-        </nav>
+        <main className="ig-grid">
+          <Card id="path" title="Where to start reading" wide>
+            <ReadingPath repo={repo} keyFiles={overview.keyFiles} />
+          </Card>
 
-        <main className="content">
-          <Section id="overview" title="Overview">
-            {overview.oneLiner ? <p className="lede">{overview.oneLiner}</p> : <p className="muted">No description or README introduction found.</p>}
-            {overview.intro && <p className="body-text">{overview.intro}</p>}
+          <Card id="structure" title="Structure" wide aside={<span className="ig-card-note">Tile size = number of files</span>}>
+            {overview.structure.dirs.length || overview.structure.rootFiles ? (
+              <StructureTreemap repo={repo} structure={overview.structure} />
+            ) : (
+              <p className="ig-empty">No folders.</p>
+            )}
+          </Card>
 
-            {ai.status === "streaming" && !ai.text && (
-              <p className="ai-note" aria-live="polite">
-                <span className="pulse" aria-hidden="true" /> Writing an AI summary…
-              </p>
-            )}
-            {ai.text && (
-              <div className="ai-summary" aria-live="polite">
-                <Markdown text={ai.text} />
-              </div>
-            )}
-            {ai.status === "unavailable" && (
-              <p className="ai-note">
-                AI summary is unavailable right now{ai.note ? ` — ${ai.note.replace(/\.$/, "")}` : ""}. Everything on this page comes straight from the repository files.
-              </p>
-            )}
-            {repo.truncated && <p className="ai-note">This repository is very large, so GitHub returned a partial file list. Rankings cover the files it returned.</p>}
-          </Section>
+          <Card id="languages" title="Languages">
+            <LanguageDonut languages={overview.languages} />
+          </Card>
+
+          <Card id="health" title="Project health">
+            <HealthPanel health={overview.health} />
+          </Card>
+
+          <Card id="stack" title="Stack">
+            <StackChips stack={overview.stack} />
+          </Card>
 
           {overview.run && (
-            <Section id="run" title="Run it">
-              <pre className="code-block">
+            <Card id="run" title="Run it">
+              <pre className="code-block terminal">
                 <code>{overview.run.code}</code>
               </pre>
-              <p className="source-line">From {overview.run.source}</p>
-            </Section>
+              <p className="ig-card-note">From {overview.run.source}</p>
+            </Card>
           )}
 
-          <Section id="key-files" title="Key files">
-            {overview.keyFiles.length ? (
-              <ul className="file-list">
-                {overview.keyFiles.map((f) => (
-                  <li key={f.path}>
-                    <a className="file-path" href={githubFileUrl(repo, f.path)} target="_blank" rel="noopener noreferrer">
-                      {f.path}
-                    </a>
-                    <span className="file-reason">{f.reason}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">No readable source files found.</p>
-            )}
-          </Section>
-
-          <Section id="stack" title="Stack">
-            {overview.stack.length > 0 && (
-              <ul className="stack-list">
-                {overview.stack.map((s) => (
-                  <li key={s}>{s}</li>
-                ))}
-              </ul>
-            )}
-            {overview.languages.length > 0 ? (
-              <>
-                <div className="lang-bar" role="img" aria-label={overview.languages.map((l) => `${l.name} ${Math.round(l.pct)}%`).join(", ")}>
-                  {overview.languages.map((l, i) => (
-                    <span key={l.name} style={{ width: `${l.pct}%`, background: LANG_COLORS[i % LANG_COLORS.length] }} />
-                  ))}
-                </div>
-                <ul className="lang-legend">
-                  {overview.languages.map((l, i) => (
-                    <li key={l.name}>
-                      <span className="swatch" style={{ background: LANG_COLORS[i % LANG_COLORS.length] }} aria-hidden="true" />
-                      {l.name} <span className="muted">{l.pct < 10 ? l.pct.toFixed(1) : Math.round(l.pct)}%</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              !overview.stack.length && <p className="muted">No recognised languages or manifests.</p>
-            )}
-          </Section>
-
-          <Section id="structure" title="Structure">
-            {overview.structure.dirs.length ? (
-              <ul className="dir-list">
-                {overview.structure.dirs.map((d) => (
-                  <li key={d.name}>
-                    <a className="file-path" href={`https://github.com/${repo.owner}/${repo.repo}/tree/${encodeURIComponent(repo.branch)}/${encodeURIComponent(d.name)}`} target="_blank" rel="noopener noreferrer">
-                      {d.name}/
-                    </a>
-                    <span className="file-reason">{d.meaning || "—"}</span>
-                    <span className="dir-count">{d.count.toLocaleString()} {d.count === 1 ? "file" : "files"}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">All {overview.structure.rootFiles} files live at the top level.</p>
-            )}
-          </Section>
+          {repo.truncated && <p className="ig-note">This repository is very large, so GitHub returned a partial file list. The charts cover the files it returned.</p>}
         </main>
 
-        <AskPanel analysis={analysis} />
+        <AskPanel analysis={analysis} onUpgrade={onUpgrade} />
       </div>
     </div>
   );

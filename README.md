@@ -4,22 +4,36 @@ Don't mind this project - renamed to Gitsum. It's a draft dump but I'll incorpor
 remember to join developer program once MVP built
 https://docs.github.com/en/get-started/exploring-integrations/github-developer-program
 
-## How the app works now (Oct 2026)
+## How the app works now (Nov 2026)
 
-- **No token needed for the core flow.** The browser reads repo metadata and the file tree from GitHub's public REST API (2 calls per repo, cached 10 min, 60 calls/hour per visitor IP) and file contents from `raw.githubusercontent.com` (not rate-limited the same way). Code: `src/lib/github.js`.
-- **Overview without AI.** README intro, stack, languages, ranked key files, run instructions and folder structure are computed locally. Code: `src/lib/analyze.js`.
-- **Q&A without AI.** Common questions are answered from the overview; anything else searches the key files (BM25, definition-aware) and returns `path:line` citations that open on GitHub.
-- **AI is optional.** `/api/*` is rewritten to the backend (`vercel.json`). If `GET /api/github/summary` streams, the AI summary appears; if the backend fails, the page says so and keeps working. Code: `src/lib/ai.js`.
-- **Shareable URLs.** `/<owner>/<repo>` (or `?repo=owner/repo`) opens a repo directly, so replacing `github.com` with this site's domain works.
+- **Free, no sign-in:** paste a repo → an infographic overview built in the browser from GitHub's public API (reading path, structure treemap, languages, project health, stack, run command) and code-search answers with `path:line` sources. Code: `src/lib/github.js`, `src/lib/analyze.js`, `src/components/Infographic.jsx`.
+- **Gitsum Pro ($5/month):** AI answers from Claude that read the code and cite `path:line`. Visitors who try to chat without signing in are offered Pro; free accounts get an upgrade card under each answer.
+- **Shareable URLs:** `/<owner>/<repo>` opens a repo directly, so replacing `github.com` with this site's domain works.
 
-### Backend contract (for `grakken-backend-api`)
+### Architecture
 
-| Endpoint | Status | Response |
+| Part | Where | Notes |
 |---|---|---|
-| `GET /api/github/summary?owner=&repo=` | used today | `text/event-stream`, `data: <text>` chunks, ends with `data: [DONE]` |
-| `POST /api/github/ask` `{ owner, repo, question, context: [{ path, startLine, snippet }] }` | proposed | same SSE format; until it exists the UI falls back to code search |
+| Sign-in | Supabase Auth (Google, email link) | `src/lib/auth.jsx` |
+| Payments | Stripe Checkout + Billing Portal | `api/checkout.js`, `api/portal.js` |
+| Subscription state | `public.gitsum_subscriptions` | written only by `api/stripe-webhook.js`; SQL in `supabase/migrations/` |
+| AI chat | `POST /api/chat` → Anthropic Messages API, streamed | model from `GITSUM_MODEL` (default `claude-haiku-5-5`) |
+| Plan + usage | `GET /api/me` | |
 
-Errors should be JSON `{ "error": "..." }` with a 4xx/5xx status (e.g. `503 { "error": "OPENAI_API_KEY is not configured" }`) instead of crashing the function.
+**Scaling.** Every `/api` route is a stateless Vercel Function, so capacity grows with traffic. Shared state lives outside the functions: Supabase for subscriptions and Upstash Redis for limits (per-user burst limit, monthly quota, and a global daily ceiling that caps the AI bill during a spike). The repository context is sent as a cached system block, so follow-up questions on the same repo reuse Anthropic's prompt cache. A failed model call is not counted against the user's quota. To serve more people, raise `GITSUM_GLOBAL_DAILY_LIMIT` and the Anthropic rate tier; to change cost per answer, change `GITSUM_MODEL` or `GITSUM_MAX_TOKENS`.
+
+**Turning it on.** Without the environment variables in `.env.example` the site runs in free mode and hides the Pro offer. Steps:
+1. Supabase: create a project, run `supabase/migrations/0001_gitsum_subscriptions.sql`, enable the Google provider, add the site URL to the redirect allow-list.
+2. Stripe: create the product "Gitsum Pro" with a $5/month recurring price; add a webhook to `https://<site>/api/stripe-webhook` for `checkout.session.completed` and `customer.subscription.created/updated/deleted`; enable the customer portal.
+3. Anthropic: create an API key.
+4. Upstash: add the Upstash Redis integration from the Vercel Marketplace.
+5. Vercel: set every variable in `.env.example`, then redeploy.
+
+Tests: `npm test` runs the API handlers against in-memory fakes of Supabase, Stripe, Anthropic and Redis.
+
+### Old backend
+
+The previous backend (`grakken-backend-api`, a git submodule behind a `/api/*` rewrite) crashed on every request and is no longer used.
 
 # GRAKKEN Github-Repo-Analyser (v0.1) (Beta)
 
