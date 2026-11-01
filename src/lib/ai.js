@@ -1,56 +1,37 @@
-// Optional AI layer served by the backend (vercel.json rewrites /api/* to it).
-// Everything here is best-effort: when the backend is down or misconfigured the app
-// keeps working on the deterministic analysis in ./analyze.js.
+// AI answers from /api/chat (Gitsum Pro). Non-subscribers keep the free code-search answers in ./analyze.js.
 
-const FIRST_BYTE_TIMEOUT_MS = 20_000;
+const FIRST_BYTE_TIMEOUT_MS = 25_000;
 
-export class AiUnavailableError extends Error {
-  constructor(reason, detail) {
-    super(reason);
-    this.name = "AiUnavailableError";
-    this.detail = detail;
+export class ChatError extends Error {
+  /** code: login_required | subscription_required | rate_limited | quota_exceeded | capacity | not_configured | network | model */
+  constructor(code, message) {
+    super(message);
+    this.name = "ChatError";
+    this.code = code;
   }
 }
 
-async function describeFailure(res) {
-  let body = "";
+async function errorFrom(res) {
+  let code = "model";
+  let message = `The AI server returned an error (${res.status}).`;
   try {
-    body = await res.text();
+    const body = await res.json();
+    if (body?.error?.code) code = body.error.code;
+    if (body?.error?.message) message = body.error.message;
   } catch {
-    /* ignore */
+    if (res.status === 404) {
+      code = "not_configured";
+      message = "AI chat isn't available on this site yet.";
+    }
   }
-  let message = "";
-  try {
-    const json = JSON.parse(body);
-    message = json.error?.message || json.error || json.message || "";
-  } catch {
-    message = "";
-  }
-  if (/FUNCTION_INVOCATION_FAILED/.test(body)) {
-    return new AiUnavailableError("The AI server crashed while handling the request.", "Backend function failed (FUNCTION_INVOCATION_FAILED) — usually a missing or expired API key/token in its environment.");
-  }
-  if (res.status === 404) return new AiUnavailableError("The AI server doesn't support this yet.", `${res.url} returned 404`);
-  if (res.status === 401 || res.status === 403) return new AiUnavailableError("The AI server isn't authorised to call GitHub or the model.", message || `HTTP ${res.status}`);
-  if (res.status === 429) return new AiUnavailableError("The AI server is rate-limited right now.", message || "HTTP 429");
-  return new AiUnavailableError(typeof message === "string" && message ? message : `The AI server returned an error (${res.status}).`, body.slice(0, 200));
-}
-
-function extractText(data) {
-  if (data === "[DONE]") return null;
-  try {
-    const json = JSON.parse(data);
-    if (typeof json === "string") return json;
-    return json.content ?? json.text ?? json.delta ?? json.choices?.[0]?.delta?.content ?? "";
-  } catch {
-    return data;
-  }
+  return new ChatError(code, message);
 }
 
 /**
- * Streams Server-Sent Events from `url` and calls onText(chunk) for every data payload.
- * Resolves when the stream ends or "[DONE]" arrives. Throws AiUnavailableError on failure.
+ * Streams an answer. Calls onText(chunk) as text arrives; resolves with { used, limit } when done.
+ * Throws ChatError with a code the UI can act on.
  */
-export async function streamSSE(url, { init, onText, signal }) {
+export async function streamChat({ token, payload, onText, signal }) {
   const controller = new AbortController();
   const abort = () => controller.abort();
   signal?.addEventListener("abort", abort);
@@ -58,35 +39,26 @@ export async function streamSSE(url, { init, onText, signal }) {
 
   let res;
   try {
-    res = await fetch(url, { ...init, signal: controller.signal, headers: { Accept: "text/event-stream", ...(init?.headers || {}) } });
+    res = await fetch("/api/chat", {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(payload),
+    });
   } catch (err) {
     clearTimeout(timer);
     signal?.removeEventListener("abort", abort);
     if (signal?.aborted) throw err;
-    throw new AiUnavailableError("The AI server didn't respond.", String(err?.message || err));
+    throw new ChatError("network", "Couldn't reach the AI. Check your connection and try again.");
   }
   clearTimeout(timer);
 
   try {
-    if (!res.ok) throw await describeFailure(res);
-    const type = res.headers.get("content-type") || "";
-    if (!type.includes("event-stream")) {
-      // Non-streaming JSON fallback: { summary } / { answer } / { text }
-      const text = await res.text();
-      let out = text;
-      try {
-        const json = JSON.parse(text);
-        out = json.summary ?? json.answer ?? json.text ?? json.content ?? text;
-      } catch {
-        /* plain text */
-      }
-      if (out) onText(String(out));
-      return;
-    }
-
+    if (!res.ok) throw await errorFrom(res);
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    let meta = {};
     for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
@@ -101,30 +73,37 @@ export async function streamSSE(url, { init, onText, signal }) {
           .map((l) => l.slice(5).replace(/^ /, ""))
           .join("\n");
         if (!data) continue;
-        if (/^event:\s*error/m.test(block)) throw new AiUnavailableError(extractText(data) || "The AI server reported an error.");
-        const text = extractText(data);
-        if (text === null) return;
-        if (text) onText(text);
+        if (/^event:\s*error/m.test(block)) {
+          let msg = data;
+          try {
+            msg = JSON.parse(data);
+          } catch {
+            /* plain text */
+          }
+          throw new ChatError("model", String(msg));
+        }
+        if (data === "[DONE]") return meta;
+        try {
+          const obj = JSON.parse(data);
+          if (obj.text) onText(obj.text);
+          if (obj.done) meta = { used: obj.used, limit: obj.limit };
+        } catch {
+          onText(data);
+        }
       }
     }
+    return meta;
   } finally {
     signal?.removeEventListener("abort", abort);
   }
 }
 
-export function streamRepoSummary({ owner, repo }, onText, signal) {
-  return streamSSE(`/api/github/summary?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`, { onText, signal });
-}
-
-/**
- * Proposed backend contract (not implemented in the backend yet):
- * POST /api/github/ask { owner, repo, question, context: [{ path, snippet }] } → SSE text stream.
- * Until it exists, the 404 makes the UI fall back to code search.
- */
-export function streamRepoAnswer({ owner, repo }, question, context, onText, signal) {
-  return streamSSE("/api/github/ask", {
-    init: { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ owner, repo, question, context }) },
-    onText,
-    signal,
+/** Turns `path:12-30` / `path` citations in an AI answer into GitHub links (markdown in, markdown out). */
+export function linkifyCitations(markdown, knownPaths, toUrl) {
+  const known = new Set(knownPaths);
+  return markdown.replace(/`([^`\s]+?)(?::(\d+)(?:[-–](\d+))?)?`/g, (whole, path, a, b) => {
+    if (!known.has(path)) return whole;
+    const label = a ? `${path}:${a}${b ? `-${b}` : ""}` : path;
+    return `[\`${label}\`](${toUrl(path, a ? Number(a) : undefined, b ? Number(b) : undefined)})`;
   });
 }

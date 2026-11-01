@@ -285,6 +285,22 @@ export function findRunInstructions(sections, pkg) {
   return null;
 }
 
+// ---------- health signals ----------
+
+function repoHealth(files, readme, repoData) {
+  const has = (re) => files.some((f) => re.test(f.path));
+  const days = repoData.pushedAt ? Math.floor((Date.now() - new Date(repoData.pushedAt).getTime()) / 86_400_000) : null;
+  const readmeWords = readme ? (readme.match(/[\p{L}\p{N}]+/gu) || []).length : 0;
+  return [
+    { id: "readme", label: "README", ok: readmeWords >= 150, value: readmeWords ? `${readmeWords.toLocaleString()} words` : "none" },
+    { id: "tests", label: "Tests", ok: has(TEST_PATH), value: has(TEST_PATH) ? `${files.filter((f) => TEST_PATH.test(f.path)).length} files` : "none found" },
+    { id: "ci", label: "CI", ok: has(/^\.github\/workflows\/|^\.circleci\/|^\.gitlab-ci\.yml$|^azure-pipelines\.yml$/), value: has(/^\.github\/workflows\//) ? "GitHub Actions" : has(/^\.circleci\/|^\.gitlab-ci|^azure-pipelines/) ? "configured" : "none found" },
+    { id: "license", label: "License", ok: !!repoData.license, value: repoData.license || "none" },
+    { id: "activity", label: "Activity", ok: days !== null && days <= 180, value: days === null ? "unknown" : days <= 1 ? "today" : days < 60 ? `${days}d ago` : days < 730 ? `${Math.round(days / 30)}mo ago` : `${Math.round(days / 365)}y ago` },
+    { id: "docs", label: "Docs", ok: has(/^(docs?|documentation|website)\//i) || has(/\.mdx?$/i) && files.filter((f) => /\.mdx?$/i.test(f.path)).length >= 3, value: has(/^(docs?|documentation|website)\//i) ? "docs folder" : `${files.filter((f) => /\.mdx?$/i.test(f.path)).length} markdown files` },
+  ];
+}
+
 // ---------- overview ----------
 
 export async function buildOverview(repoData, { signal } = {}) {
@@ -326,6 +342,7 @@ export async function buildOverview(repoData, { signal } = {}) {
     keyFiles: rankKeyFiles(files),
     run: findRunInstructions(sections, pkg),
     fileCount: meaningfulFiles.length,
+    health: repoHealth(files, readme, repoData),
   };
 }
 

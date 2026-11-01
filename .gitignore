@@ -24,6 +24,4 @@ dist-ssr
 *.sln
 *.sw?
 
-# submodules
-api/*
 .vercel
